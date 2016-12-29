@@ -1,0 +1,35 @@
+version: '2'
+services:
+  web_db:
+    build: ./database/mysql
+    command: "mysqld --innodb-buffer-pool-size=20M"
+    volumes:
+      - ./database/mysql/data/:/var/lib/mysql
+      - ./database/mysql/initDB/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: 'YOURPASSWORD'
+      MYSQL_DATABASE: 'support-technique'
+      MYSQL_ROOT_HOST: '172.17.0.1'
+    ports:
+      - "3306:3306"
+    container_name: web_db
+
+  web:
+    build: .
+    depends_on:
+      - web_db
+    links:
+      - web_db:db
+    ports:
+      - "80:80"
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - web_db
+    links:
+      - web_db:mysql
+    ports:
+      - "8181:80"
+    environment:
+      PMA_HOST: mysql
